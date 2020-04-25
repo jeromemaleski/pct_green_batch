@@ -1,2 +1,2 @@
 # pct_green
- app that caluclates percent green cover on a raster
+ app that calculates percent green cover on a raster
