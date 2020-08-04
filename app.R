@@ -15,10 +15,11 @@
 # lapply(list.of.packages,function(x){library(x,character.only=TRUE)}) 
 # 
 library(shiny)
-library(shinyFiles)
-library(rgdal)
-library(raster)
-library(ggplot2)
+library(shinyFiles) #file upload
+library(fs) #cross platform files 
+library(rgdal) #geospatial package
+library(raster) #raster manipulation
+library(ggplot2) #graphing
 
 source("helpers.R")
 
@@ -31,7 +32,7 @@ ui <- fluidPage(
 
     # Sidebar with data upload widget and date range slider 
     sidebarLayout(
-        #data uplead widget
+        #data upload widget
         sidebarPanel(
         #select folder    
             strong("Select a folder on your computer with images you want to process."),
@@ -102,13 +103,11 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output, session) {
-    volumes = getVolumes()
-    shinyDirChoose(
-        input,
-        'dir',
-        roots = volumes,
-        filetypes = c('JPG', 'tif', 'tiff')
-    )
+    volumes <- c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()())
+    #shinyFileChoose(input, "file", roots = volumes, session = session)
+    # by setting `allowDirCreate = FALSE` a user will not be able to create a new directory
+    shinyDirChoose(input, "dir", roots = volumes, session = session, restrictions = system.file(package = "base"))
+    #shinyFileSave(input, "save", roots = volumes, session = session, restrictions = system.file(package = "base"))
     
     # init a reactive data frame for plotting
     df1 <- data.frame()
@@ -301,8 +300,8 @@ server <- function(input, output, session) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
-
+#shinyApp(ui, server, options = list(display.mode = 'showcase'))
+shinyApp(ui, server)
 
 
 
