@@ -17,6 +17,8 @@
 library(shiny)
 library(shinyFiles) #file upload
 library(fs) #cross platform files 
+#library(exifr) #image metadata
+#library(dplyr) #data manipulation
 library(rgdal) #geospatial package
 library(raster) #raster manipulation
 library(ggplot2) #graphing
@@ -49,7 +51,7 @@ ui <- fluidPage(
             actionButton("RunConvt","Run Convert"),
             
             tags$hr(),
-         #anylise image   
+         #analyze image   
             strong("Select an anylisis you want to run."),
             
             selectInput("select2", "",
@@ -119,18 +121,21 @@ server <- function(input, output, session) {
     # #global <- reactiveValues(datapath = getwd())
     # 
     # dir <- reactive({ parseDirPath(volumes,input$dir)
-    #     #renderText({dir.path})
+    #     #renderText({dir_path})
     #     })
     
- #list directory path and file names   
+ #read directory path, file names and metadata   
     observe({
         req(input$dir)
         
-            dir.path <- isolate({parseDirPath(volumes,input$dir)})
-            output$dir<-renderText(dir.path)
-            files.path <- isolate({list.files(path = dir.path ,pattern=('.JPG|.tiff|.tif'), full.names = TRUE, recursive=FALSE)})
-            files.names<- isolate({list.files(path = dir.path ,pattern=('.JPG|.tiff|.tif'), full.names = FALSE, recursive=FALSE)})
-            output$files<-renderText(files.names)
+            dir_path <- isolate({parseDirPath(volumes,input$dir)})
+            output$dir<-renderText(dir_path)
+            files_path <- isolate({list.files(path = dir_path ,pattern=('.JPG|.jpg|.tiff|.tif'), full.names = TRUE, recursive=FALSE)})
+            files_names<- isolate({list.files(path = dir_path ,pattern=('.JPG|.jpg|.tiff|.tif'), full.names = FALSE, recursive=FALSE)})
+            output$files<-renderText(files_names)
+            #extrct metadata
+            #exifinfo <- read_exif(files_path)
+            
         
     })
     
@@ -140,7 +145,7 @@ server <- function(input, output, session) {
         handlerExpr = {
             path = parseDirPath(volumes,input$dir)
             print("Running Convert") 
-            files<-list.files(path = path ,pattern=('.JPG|.tiff'), full.names = TRUE, recursive=FALSE)
+            files<-list.files(path = path ,pattern=('.JPG|.jpg|.tiff|.tif'), full.names = TRUE, recursive=FALSE)
             names<-sub("\\..*", "", basename(files))
             dir.create(path+"/converted")
             
@@ -173,19 +178,28 @@ server <- function(input, output, session) {
         eventExpr = input[["RunAnl"]],
         handlerExpr = {
             print("Running Analysis") 
-            path=parseDirPath(volumes,input$dir)
- path=getwd()  
+            #path=parseDirPath(volumes,input$dir)
+            #path=getwd()  
  
             if (input$select2 == "pctgV") {
                 path=parseDirPath(volumes,input$dir)
                 files<-list.files(path = path,pattern='VARI.*tif', full.names = TRUE, recursive=TRUE)
                 names<- sub("\\..*", "", basename(files))
-                dates<-as.Date(sub("(?<=2019|2020).*","",substring(names,11),perl=TRUE),format="%d%b%Y")
+                #dates<-as.Date(sub("(?<=2019|2020).*","",substring(names,11),perl=TRUE),format="%d%b%Y")
+                #need to extract dates from metadata, until implemented generate fake dates
+                dates<-seq(from=as.Date("2020/1/1"),by='day',length =length(files))
 
                 #this runs the raster calculation on all files
                 pctg<-pctgreen(files,dates,input$thr)
+
+                #add names
+                pctg<-cbind(names,pctg)
                 
+                #parse date
                 pctg$date<-as.Date(pctg$date)
+                
+                #order columns
+                #pctg <- pctg[c("name","date","pct")]
 
                 #update daterange
                 updateDateRangeInput(session, "daterange",
