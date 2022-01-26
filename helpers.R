@@ -28,6 +28,17 @@ VARI <-  function(img,i,j,k){
   return(VARI_ras);
 }
 
+senteraNDVI <-  function(img,i,j,k){
+  r<-getValues(img[[i]])
+  g<-getValues(img[[j]])
+  b<-getValues(img[[k]])
+  NDVI <- (1.236*b-0.188*r)/(b+0.044*r);
+  NDVI_ras<-img[[1]];
+  values(NDVI_ras)<-NDVI
+  return(NDVI_ras);
+}
+
+
 pctgreen <- function(files,dates,threshold){
   
   # Create a Progress object

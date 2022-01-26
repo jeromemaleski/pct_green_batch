@@ -47,7 +47,8 @@ ui <- fluidPage(
             
             selectInput("select1", "", 
                                c("Convert RGB to VARI" = "cnV",
-                                 "Convert RGB to GLI" = "cnG")),
+                                 "Convert RGB to GLI" = "cnG",
+                                 "Convert Sentera RGB to NDVI" = "cnN")),
             actionButton("RunConvt","Run Convert"),
             
             tags$hr(),
@@ -170,7 +171,16 @@ server <- function(input, output, session) {
                         GLI_1<-GLI(my_raster,1,2,3)
                         writeRaster(GLI_1,paste0(path+"/converted/GLI_",names[i],".tiff"),overwrite=TRUE)
                         }
-                    } 
+                 }else if (input$select1 == "cnN") {
+                    for (i in seq_along(files)){
+                        progress$inc(1/seq_along(files), detail = paste("image", i))
+                        my_raster<-brick(files[i])
+                        NDVI_1<-senteraNDVI(my_raster,1,2,3)
+                         writeRaster(NDVI_1,paste0(path+"/converted/NDVI_",names[i],".tiff"),overwrite=TRUE)
+                       }
+                }
+            
+            
             })       
 
 #run % green analysis                 
@@ -216,10 +226,15 @@ server <- function(input, output, session) {
                 path=parseDirPath(volumes,input$dir)
                 files<-list.files(path = path,pattern='GLI.*tif', full.names = TRUE, recursive=TRUE)
                 names<- sub("\\..*", "", basename(files))
-                dates<-as.Date(sub("(?<=2019|2020).*","",substring(names,10),perl=TRUE),format="%d%b%Y")
+                dates<-seq(from=as.Date("2020/1/1"),by='day',length =length(files))
+                #dates<-as.Date(sub("(?<=2019|2020).*","",substring(names,10),perl=TRUE),format="%d%b%Y")
                 #this runs the raster calculation on all files
                 pctg<-pctgreen(files,dates,input$thr)
                 
+                #add names
+                pctg<-cbind(names,pctg)
+                
+                #parse date
                 pctg$date<-as.Date(pctg$date)
                 
                 #update daterange
@@ -236,10 +251,15 @@ server <- function(input, output, session) {
                 path=parseDirPath(volumes,input$dir)
                 files<-list.files(path = path,pattern='NDVI.*tif', full.names = TRUE, recursive=TRUE)
                 names<- sub("\\..*", "", basename(files))
-                dates<-as.Date(sub("(?<=2019|2020).*","",names,perl=TRUE),format="%d%b%Y")
+                dates<-seq(from=as.Date("2020/1/1"),by='day',length =length(files))
+                #dates<-as.Date(sub("(?<=2019|2020).*","",names,perl=TRUE),format="%d%b%Y")
                 #this runs the raster calculation on all files
                 pctg<-pctgreenNDVI(files,dates,input$thr)
                 
+                #add names
+                pctg<-cbind(names,pctg)
+                
+                #parse date
                 pctg$date<-as.Date(pctg$date)
                 
                 #update daterange
