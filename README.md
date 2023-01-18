@@ -4,4 +4,4 @@ Indexes avalible are "Green Leaf Index" (GLI) and "Visible Atmospherically Resis
 After creating an index you can then chose a threshold to evaluate percent green in the image.
 A graph of image % green values and a table are created.
 
-![Screenshot](batch_process_screenshot.png)
+![Screenshot](percent_green_batch_example.png)
