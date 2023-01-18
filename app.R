@@ -17,8 +17,6 @@
 library(shiny)
 library(shinyFiles) #file upload
 library(fs) #cross platform files 
-#library(exifr) #image metadata
-#library(dplyr) #data manipulation
 library(rgdal) #geospatial package
 library(raster) #raster manipulation
 library(ggplot2) #graphing
@@ -30,7 +28,7 @@ source("helpers.R")
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Percent Green Cover"),
+    titlePanel("Percent Green Cover Batch Process"),
 
     # Sidebar with data upload widget and date range slider 
     sidebarLayout(
@@ -81,8 +79,6 @@ ui <- fluidPage(
                                end = Sys.Date()
                                )
 
-
-            
         ),
    
         mainPanel(
@@ -131,13 +127,12 @@ server <- function(input, output, session) {
         
             dir_path <- isolate({parseDirPath(volumes,input$dir)})
             output$dir<-renderText(dir_path)
-            files_path <- isolate({list.files(path = dir_path ,pattern=('.JPG|.jpg|.tiff|.tif'), full.names = TRUE, recursive=FALSE)})
-            files_names<- isolate({list.files(path = dir_path ,pattern=('.JPG|.jpg|.tiff|.tif'), full.names = FALSE, recursive=FALSE)})
+            files_path <- isolate({list.files(path = dir_path ,pattern=('.JPG|.jpg|.jpeg|.tiff|.tif'), full.names = TRUE, recursive=FALSE)})
+            files_names<- isolate({list.files(path = dir_path ,pattern=('.JPG|.jpg|.jpeg|.tiff|.tif'), full.names = FALSE, recursive=FALSE)})
             output$files<-renderText(files_names)
             #extrct metadata
             #exifinfo <- read_exif(files_path)
             
-        
     })
     
 #run file conversion    
